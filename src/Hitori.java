@@ -105,24 +105,25 @@ public class Hitori {
             for(int i = 0 ; i < timesPerTemperature ; i++) {
                 /* on copie la grille puis nous lui changeons une case et on récupère son score */
                 nextGrid = copy(this.grid);
-                randomize(nextGrid,this.commons);
-                nextScore = getScore(nextGrid);
+                nextScore = currentScore + randomize(nextGrid,this.commons);
 
-                /* Si son score est 0 alors on à notre solution on peut arrêter le programme */
-                if(nextScore <= 0) {
-                    this.grid = nextGrid;
-                    return;
-                }
                 /*
                  * si le score est supérieur ou égale au score déjà enregistré ou si la méthode du recuit ne nous donne 
                  * pas une meilleure solution alors on passe à l'itération suivante 
                  */
-                if(nextScore >= currentScore && !(r.nextInt(100) < 1.00/(1.00 + Math.exp((nextScore-currentScore)/T)))) continue;
-
-                /* sinon on sauvegarde la grille, le score et on incrémente notre nombre d'état sauvegardé (à but statistique) */
-                currentScore = nextScore;
-                this.grid = nextGrid;
-                states++;
+                if(nextScore < currentScore || r.nextInt(100) < 1.00/(1.00 + Math.exp((nextScore-currentScore)/T))) {
+                    if(isValid(nextGrid)) {
+                        if(nextScore == 0) {
+                            this.grid = nextGrid; return;
+                        }
+                        else {
+                            /* sinon on sauvegarde la grille, le score et on incrémente notre nombre d'état sauvegardé (à but statistique) */
+                            currentScore = nextScore;
+                            this.grid = nextGrid;
+                            states++;
+                        }
+                    }
+                }
             }
             
             /* on applique notre facteur de diminution de température */
@@ -233,6 +234,29 @@ public class Hitori {
         return score;
     }
 
+    public static int getCellScore(int[][] grid, int i, int j) {
+        int score = 0;
+        boolean[] duplicatedI = new boolean[grid.length+1];
+        boolean[] duplicatedJ = new boolean[grid.length+1];
+
+        /*
+         * Pour chaque ligne et colonne, si on à pas déjà trouver l'élément alors on marque comme quoi on l'a déjà
+         * trouver, si on l'a déjà trouver alors on incrémente le score
+         */
+        for(int k = 0 ; k<grid.length ; k++) {
+            int val;
+            if((val = grid[i][k]) > 0) {
+                if(!duplicatedI[val-1]) duplicatedI[val-1] = true;
+                else score++;
+            }
+            if((val = grid[k][j]) > 0) {
+                if(!duplicatedJ[val-1]) duplicatedJ[val-1] = true;
+                else score++;
+            }
+        }
+        return score;
+    }
+
     /**
      * Permet de noircir une case aléatoire parmi les éléments communs de la grille et de vérifier que la case noirci
      * n'enfreint pas les règles du jeu à savoir être connecté et ne pas avoir deux cases noirci adjacentes
@@ -243,7 +267,7 @@ public class Hitori {
      * @see Hitori#isValid(int[][])
      * @see Hitori#hasDarkNeighbors(int[][], int, int)
      */
-    public static void randomize(int[][] grid, ArrayList<int[]> commons) {
+    public static int randomize(int[][] grid, ArrayList<int[]> commons) {
         int i, j, k;
         boolean changed = false;
         do {
@@ -256,13 +280,13 @@ public class Hitori {
              * on vérifie que les voisins ne sont pas noirci avant d'effectuer le changement
              */
             if(grid[i][j] < 0 || (!hasDarkNeighbors(grid,i,j))) {
+                int oldCellScore = getCellScore(grid,i,j);
                 grid[i][j] = -grid[i][j];
-                /* Si la grille n'est plus valide alors on revient en arrière sur nos changements */
-                if(grid[i][j] < 0 && !isValid(grid)) grid[i][j] = -grid[i][j];
                 /* Sinon on indique qu'on a trouver une solution */
-                else changed = true;
+                int newCellScore = getCellScore(grid,i,j);
+                return newCellScore - oldCellScore;
             }
-        } while(!changed);
+        } while(true);
     }
 
     /**
@@ -367,11 +391,19 @@ public class Hitori {
     }
 
     public static void main(String[] args) {
-        long firstStart = System.currentTimeMillis();
-        Hitori h = new Hitori("15.txt",15,100,0.9992,200,0.000001, 50);
-        h.solve();
-        System.out.println(h);
-        long timeElapsed = System.currentTimeMillis() - firstStart;
-        System.out.println(timeElapsed + "ms");
+        String[] files = new String[]{"5.txt","8.txt","10.txt","12.txt","15.txt","20.txt"};
+        for (String file: files) {
+            int size = Integer.parseInt(file.split("\\.")[0]);
+            System.out.println("******" + size + "******");
+            for(int i = 0 ; i < 10 ; i++) {
+                long firstStart = System.currentTimeMillis();
+                Hitori h = new Hitori(file, size, 200, 0.9995, 250, 0.000001, 20);
+                h.solve();
+                //System.out.println(h);
+                long timeElapsed = System.currentTimeMillis() - firstStart;
+                System.out.println((i+1) + ":" + timeElapsed + "ms");
+            }
+        }
+
     }
 }

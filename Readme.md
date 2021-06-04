@@ -1,12 +1,34 @@
 # Hitori avec recuit simulé
+## Introduction
+Ce projet est une implémentation de l'algorithme du recuit simulé afin de résoudre une grille du jeu [hitori](https://fr.wikipedia.org/wiki/Hitori). Le but est de transformer une grille d'origine en noircissant certaines cases afin de respecter les 3 règles suivantes :
+* Chaque ligne et chaque colonne ne doit contenir qu'une seule occurrence d'un chiffre donné.
+* Les cases marquées ne doivent pas être adjacentes horizontalement ou verticalement, elles peuvent être en diagonale.
+* Les cases non marquées doivent toutes être connectées entre elles par adjacence horizontalement ou verticalement.
+Nous avions à résoudre cette grille en utilisant une des méta-heuristiques suivantes : Recuit simulé ; Algorithmes Génétiques ; Optimisation par Essaim de Particules. J'ai choisi le recuit simulé car c'est selon moi la méta-heuristique la plus adapté au problème
+  
+## Solution
+Afin de résoudre n'importe quelle grille de Hitori, j'ai décidé d'initialiser un tableau contenant les coordonnées des éléments qui possèdes un élément dupliqué sur sa ligne ou sa colonne. Cette liste nous permettras lorsque nous allons générer un nouvel état de ne pas modifier une case dont le changement n'impacteras pas la solution finale.
+Une fois les éléments communs rassemblés, on peut commencer à résoudre la grille. On effectue la résolution tant que notre "score" est supérieur à 0 et on effectue les étapes suivantes :
+* On recopie notre grille
+* On modifie une case aléatoire et on calcul son "score"
+* si on obtient un meilleur score ou si un nombre aléatoire est inférieur à l'inverse de 1 + l'exponentielle du delta du score / T
+    * On vérifie la validité de la grille (toutes les cases blanches sont connectées) et si elle l'est on sauvegarde le score et le nouvel état de la grille. Si le score vaut 0 alors on arrête le programme.
+* On fait baisser la température en multipliant notre température par un facteur préalablement renseigné
+* Si notre température atteint un certain seuil (donné en paramètre) alors on augmente la température à une valeur renseignée en paramètre.
+
+## Utilisation
+``java -jar Hitori.jar  filename size nbALancer startTemperature decay [iterPerTemp] [seuilTemp] [resetTemp] [showGrid=1|0]``
+
+Exemple :
+``java -jar Hitori.jar 15.txt 15 10 200 0.9995 250 0.000001 20 1``
 
 ## Résultats
 *Configuration moyenne, on va s'en servir comme grille de référence*
-* T(emperature)0: 200
-* D(ecay): 0.9995
-* I(terations par temp): 250
-* S(euil)T(emperature): 0.000001
-* T(emperature)R(eset): 20
+* T0: 200
+* D: 0.9995
+* I: 250
+* ST: 0.000001
+* TR: 20
 
 |    | 5x5 | 8x8 | 10x10 | 12x12 | 15x15  | 20x20   |
 |---:|----:|----:|------:|------:|-------:|--------:|
@@ -24,13 +46,13 @@
 
 
 *On fait baisser la température vite afin de souvent la remettre à 0*
-* T(emperature)0: 100
-* D(ecay): 0.989
-* I(terations par temp): 250
-* S(euil)T(emperature): 0.000001
-* T(emperature)R(eset): 50
+* T0: 100
+* D: 0.989
+* I: 250
+* ST: 0.000001
+* TR: 50
 
-On note une instabilité dans les temps de réponse ainsi qu'une moyenne qui augmente rapidement en fonction de la difficultée de la grille
+On note une instabilité dans les temps de réponse ainsi qu'une moyenne qui augmente rapidement en fonction de la difficulté de la grille
 
 |    | 5x5 | 8x8 | 10x10 | 12x12 | 15x15   | 20x20   |
 |---:|----:|----:|------:|------:|--------:|--------:|
@@ -49,13 +71,13 @@ On note une instabilité dans les temps de réponse ainsi qu'une moyenne qui aug
 
 
 *On ne remet à 0 la température que rarement*
-* T(emperature)0: 300
-* D(ecay): 0.9999
-* I(terations par temp): 400
-* S(euil)T(emperature): 0.000001
-* T(emperature)R(eset): 50
+* T0: 300
+* D: 0.9999
+* I: 400
+* ST: 0.000001
+* TR: 50
 
-Les résultats sont très stables mais sont cependant plus lent que notre premier test
+Les résultats sont très stables mais sont cependant plus lent que notre premier test.
 
 |    | 5x5 | 8x8 | 10x10 | 12x12 | 15x15   | 20x20   |
 |---:|----:|----:|------:|------:|--------:|--------:|
@@ -74,15 +96,15 @@ Les résultats sont très stables mais sont cependant plus lent que notre premie
 
 
 *On utilise que des températures basses*
-* T(emperature)0: 10
-* D(ecay): 0.9995
-* I(terations par temp): 250
-* S(euil)T(emperature): 0.000001
-* T(emperature)R(eset): 5
+* T0: 10
+* D: 0.9995
+* I: 250
+* ST: 0.000001
+* TR: 5
 
 On peut voir que les résultats pour les grilles jusqu'à la 15x15 sont nettement inférieur, cependant pour la grille 20x20 le temps
 à beaucoup augmenté. On peut déduire qu'il faut un minimum de température maximal afin de pouvoir résoudre dans un temps correct les grandes grilles
-et que pour les plus petites grilles, avoir une température élevé est innutile.
+et que pour les plus petites grilles, avoir une température élevée est inutile.
 
 |    | 5x5 | 8x8 | 10x10 | 12x12 | 15x15   | 20x20   |
 |---:|----:|----:|------:|------:|--------:|--------:|

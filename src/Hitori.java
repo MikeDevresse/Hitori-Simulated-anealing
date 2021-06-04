@@ -120,7 +120,7 @@ public class Hitori {
                             /* sinon on sauvegarde la grille, le score et on incrémente notre nombre d'état sauvegardé (à but statistique) */
                             currentScore = nextScore;
                             this.grid = nextGrid;
-                            states++;
+                            //states++;
                         }
                     }
                 }
@@ -133,7 +133,7 @@ public class Hitori {
             if(T < resetUnder) {
                 T = resetTemp;
                 
-                long timeElapsed = System.currentTimeMillis() - start;
+                /*long timeElapsed = System.currentTimeMillis() - start;
                 start = System.currentTimeMillis();
                 System.out.printf(
                         "Score: %d ; States : %d ; time %dms ; rate: %d states per sec%n",
@@ -142,7 +142,7 @@ public class Hitori {
                         timeElapsed,
                         Math.round(states/(timeElapsed/1000.))
                 );
-                states = 0;
+                states = 0;*/
             }
         }
 
